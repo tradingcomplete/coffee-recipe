@@ -679,22 +679,153 @@
         let timeLeft = 0;
         let totalTimeElapsed = 0;
         let audioContext = null;
+        let beepAudioElement = null;
+        let completionAudioElement = null;
+        let useAudioElements = false; // スタンドアロンモードではtrueに
+
+        // スタンドアロンモードかどうかを判定
+        function isStandalone() {
+            return window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
+        }
+
+        // 音声要素を準備
+        function prepareAudioElements() {
+            // ビープ音用のaudio要素を動的に作成
+            if (!beepAudioElement) {
+                beepAudioElement = new Audio();
+                // 短いビープ音をWAVデータで作成（1000Hz, 0.1秒）
+                const sampleRate = 44100;
+                const duration = 0.1;
+                const frequency = 1000;
+                const numSamples = Math.floor(sampleRate * duration);
+                
+                const wavData = generateBeepWav(sampleRate, frequency, duration, numSamples);
+                const blob = new Blob([wavData], { type: 'audio/wav' });
+                beepAudioElement.src = URL.createObjectURL(blob);
+                beepAudioElement.load();
+            }
+            
+            // 完了音用（3つの音を連続で）
+            if (!completionAudioElement) {
+                completionAudioElement = new Audio();
+                const sampleRate = 44100;
+                const duration = 0.65;
+                const numSamples = Math.floor(sampleRate * duration);
+                
+                const wavData = generateCompletionWav(sampleRate, duration, numSamples);
+                const blob = new Blob([wavData], { type: 'audio/wav' });
+                completionAudioElement.src = URL.createObjectURL(blob);
+                completionAudioElement.load();
+            }
+        }
+
+        // ビープ音のWAVデータを生成
+        function generateBeepWav(sampleRate, frequency, duration, numSamples) {
+            const dataLength = numSamples * 2; // 16-bit
+            const bufferLength = 44 + dataLength;
+            const arrayBuffer = new ArrayBuffer(bufferLength);
+            const view = new DataView(arrayBuffer);
+            
+            // WAVヘッダー
+            writeWavHeader(view, sampleRate, dataLength);
+            
+            // 音声データ
+            let offset = 44;
+            for (let i = 0; i < numSamples; i++) {
+                const t = i / sampleRate;
+                const sample = Math.sin(2 * Math.PI * frequency * t) * 0.3;
+                const intSample = Math.max(-1, Math.min(1, sample));
+                view.setInt16(offset, intSample < 0 ? intSample * 0x8000 : intSample * 0x7FFF, true);
+                offset += 2;
+            }
+            
+            return arrayBuffer;
+        }
+
+        // 完了音のWAVデータを生成
+        function generateCompletionWav(sampleRate, duration, numSamples) {
+            const dataLength = numSamples * 2;
+            const bufferLength = 44 + dataLength;
+            const arrayBuffer = new ArrayBuffer(bufferLength);
+            const view = new DataView(arrayBuffer);
+            
+            // WAVヘッダー
+            writeWavHeader(view, sampleRate, dataLength);
+            
+            // 3音のメロディ（C5, E5, G5）
+            const notes = [523.25, 659.25, 783.99];
+            const noteDuration = 0.2;
+            const noteSamples = Math.floor(sampleRate * noteDuration);
+            
+            let offset = 44;
+            for (let i = 0; i < numSamples; i++) {
+                let sample = 0;
+                const noteIndex = Math.floor(i / (sampleRate * 0.2));
+                
+                if (noteIndex < notes.length) {
+                    const t = (i % (sampleRate * 0.2)) / sampleRate;
+                    const envelope = Math.exp(-t * 5);
+                    sample = Math.sin(2 * Math.PI * notes[noteIndex] * t) * 0.3 * envelope;
+                }
+                
+                const intSample = Math.max(-1, Math.min(1, sample));
+                view.setInt16(offset, intSample < 0 ? intSample * 0x8000 : intSample * 0x7FFF, true);
+                offset += 2;
+            }
+            
+            return arrayBuffer;
+        }
+
+        // WAVヘッダーを書き込む
+        function writeWavHeader(view, sampleRate, dataLength) {
+            const writeString = (offset, string) => {
+                for (let i = 0; i < string.length; i++) {
+                    view.setUint8(offset + i, string.charCodeAt(i));
+                }
+            };
+            
+            writeString(0, 'RIFF');
+            view.setUint32(4, 36 + dataLength, true);
+            writeString(8, 'WAVE');
+            writeString(12, 'fmt ');
+            view.setUint32(16, 16, true);
+            view.setUint16(20, 1, true); // PCM
+            view.setUint16(22, 1, true); // モノラル
+            view.setUint32(24, sampleRate, true);
+            view.setUint32(28, sampleRate * 2, true); // バイトレート
+            view.setUint16(32, 2, true); // ブロックアライン
+            view.setUint16(34, 16, true); // ビット深度
+            writeString(36, 'data');
+            view.setUint32(40, dataLength, true);
+        }
 
         // 音声を初期化（ユーザーインタラクション後に呼ばれる）
         function initAudio() {
-            if (!audioContext) {
+            // スタンドアロンモードの場合はaudio要素を使用
+            if (isStandalone()) {
+                useAudioElements = true;
                 try {
-                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                    // iOSのスタンドアロンモード対策: resumeを明示的に呼ぶ
-                    if (audioContext.state === 'suspended') {
-                        audioContext.resume();
-                    }
-                    console.log('AudioContext initialized:', audioContext.state);
+                    prepareAudioElements();
+                    console.log('Audio elements prepared for standalone mode');
                 } catch (e) {
-                    console.error('Failed to initialize AudioContext:', e);
+                    console.error('Failed to prepare audio elements:', e);
                 }
-            } else if (audioContext.state === 'suspended') {
-                audioContext.resume();
+            } else {
+                // ブラウザモードではWeb Audio APIを使用
+                if (!audioContext) {
+                    try {
+                        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                        // iOSのスタンドアロンモード対策: resumeを明示的に呼ぶ
+                        if (audioContext.state === 'suspended') {
+                            audioContext.resume();
+                        }
+                        console.log('AudioContext initialized:', audioContext.state);
+                    } catch (e) {
+                        console.error('Failed to initialize AudioContext:', e);
+                    }
+                } else if (audioContext.state === 'suspended') {
+                    audioContext.resume();
+                }
             }
         }
 
@@ -1157,7 +1288,18 @@
                 navigator.vibrate(50);
             }
             
-            // クリーンなビープ音を生成
+            // スタンドアロンモードではaudio要素を使用
+            if (useAudioElements && beepAudioElement) {
+                try {
+                    beepAudioElement.currentTime = 0;
+                    beepAudioElement.play().catch(e => console.log('Audio play failed:', e));
+                } catch (e) {
+                    console.log('Beep failed:', e);
+                }
+                return;
+            }
+            
+            // ブラウザモードではWeb Audio APIを使用
             if (audioContext) {
                 // AudioContextがsuspendedの場合はresume
                 if (audioContext.state === 'suspended') {
@@ -1194,7 +1336,18 @@
                 navigator.vibrate([100, 50, 100, 50, 100]);
             }
             
-            // 完了メロディ（ド・ミ・ソ）
+            // スタンドアロンモードではaudio要素を使用
+            if (useAudioElements && completionAudioElement) {
+                try {
+                    completionAudioElement.currentTime = 0;
+                    completionAudioElement.play().catch(e => console.log('Audio play failed:', e));
+                } catch (e) {
+                    console.log('Completion sound failed:', e);
+                }
+                return;
+            }
+            
+            // ブラウザモードではWeb Audio APIを使用
             if (audioContext) {
                 // AudioContextがsuspendedの場合はresume
                 if (audioContext.state === 'suspended') {
