@@ -206,21 +206,21 @@
         .timer-container {
             background: white;
             border-radius: 20px;
-            padding: 30px;
-            padding-bottom: 80px;
+            padding: 20px;
+            padding-bottom: 70px;
             text-align: center;
             margin-bottom: 20px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.2);
             overflow: hidden;
             position: relative;
-            min-height: 550px;
+            min-height: auto;
         }
 
         .timer-display {
-            font-size: 80px;
+            font-size: 64px;
             font-weight: 700;
             color: var(--accent-color);
-            margin: 30px 0;
+            margin: 15px 0;
             font-variant-numeric: tabular-nums;
             transition: all 0.3s;
         }
@@ -245,9 +245,9 @@
         }
 
         .progress-ring-wrapper {
-            width: 200px;
-            height: 200px;
-            margin: 20px auto;
+            width: 160px;
+            height: 160px;
+            margin: 10px auto;
             overflow: hidden;
             position: relative;
             display: flex;
@@ -261,23 +261,23 @@
         }
 
         .current-step {
-            font-size: 24px;
+            font-size: 20px;
             font-weight: 600;
             color: var(--accent-color);
-            margin-bottom: 15px;
+            margin-bottom: 8px;
         }
 
         .step-instruction {
-            font-size: 18px;
+            font-size: 16px;
             color: #666;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
 
         .timer-controls {
             display: flex;
             gap: 10px;
             justify-content: center;
-            margin-top: 20px;
+            margin-top: 15px;
         }
 
         .timer-button {
@@ -318,15 +318,15 @@
 
         .next-step-info {
             background: #f8f8f8;
-            padding: 10px 15px;
-            border-radius: 10px;
-            margin-top: 20px;
-            margin-bottom: 60px;
-            font-size: 14px;
-            max-width: 300px;
+            padding: 8px 12px;
+            border-radius: 8px;
+            margin-top: 10px;
+            margin-bottom: 50px;
+            font-size: 13px;
+            max-width: 280px;
             margin-left: auto;
             margin-right: auto;
-            box-shadow: 0 0 15px rgba(139, 69, 19, 0.3);
+            box-shadow: 0 0 12px rgba(139, 69, 19, 0.25);
         }
 
         .start-timer-button {
@@ -465,31 +465,31 @@
                 <div class="current-step" id="timerStepTitle">準備</div>
                 <div class="step-instruction" id="timerStepInstruction">豆を挽いてセットしてください</div>
 
-                <div style="background: #f0f0f0; padding: 10px; border-radius: 10px; margin-bottom: 20px;">
-                    <div style="font-size: 14px; color: #666;">総抽出時間</div>
-                    <div style="font-size: 24px; font-weight: 700; color: var(--accent-color);" id="totalTime">0:00</div>
+                <div style="background: #f0f0f0; padding: 8px; border-radius: 8px; margin-bottom: 12px;">
+                    <div style="font-size: 12px; color: #666;">総抽出時間</div>
+                    <div style="font-size: 20px; font-weight: 700; color: var(--accent-color);" id="totalTime">0:00</div>
                 </div>
 
                 <div class="progress-ring-wrapper">
-                    <svg class="progress-ring" width="200" height="200" id="progressRing">
+                    <svg class="progress-ring" width="160" height="160" id="progressRing">
                     <circle
                         stroke="#e0e0e0"
                         stroke-width="10"
                         fill="transparent"
-                        r="90"
-                        cx="100"
-                        cy="100"
+                        r="70"
+                        cx="80"
+                        cy="80"
                     />
                     <circle
                         class="progress-ring-circle"
                         stroke="var(--accent-color)"
                         stroke-width="10"
                         fill="transparent"
-                        r="90"
-                        cx="100"
-                        cy="100"
+                        r="70"
+                        cx="80"
+                        cy="80"
                         id="progressCircle"
-                        style="stroke-dasharray: 565.48; stroke-dashoffset: 0;"
+                        style="stroke-dasharray: 439.82; stroke-dashoffset: 0;"
                     />
                 </svg>
                 </div>
@@ -678,8 +678,21 @@
         let totalTimeInterval = null;
         let timeLeft = 0;
         let totalTimeElapsed = 0;
-        let audioContext = null;
-        let beepCount = 0;
+        let beepAudio = null;
+        let completionAudio = null;
+
+        // 音声を初期化（ユーザーインタラクション後に呼ばれる）
+        function initAudio() {
+            if (!beepAudio) {
+                // ビープ音（短い音）
+                beepAudio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBDGH0fPTgjMGHm7A7+OZURE=');
+                beepAudio.volume = 0.3;
+                
+                // 完了音（3音のメロディ）
+                completionAudio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBDGH0fPTgjMGHm7A7+OZURE=');
+                completionAudio.volume = 0.5;
+            }
+        }
 
         // タイマーモードを開始
         function startTimerMode() {
@@ -755,20 +768,20 @@
                     stroke="#e0e0e0"
                     stroke-width="10"
                     fill="transparent"
-                    r="90"
-                    cx="100"
-                    cy="100"
+                    r="70"
+                    cx="80"
+                    cy="80"
                 />
                 <circle
                     class="progress-ring-circle"
                     stroke="var(--accent-color)"
                     stroke-width="10"
                     fill="transparent"
-                    r="90"
-                    cx="100"
-                    cy="100"
+                    r="70"
+                    cx="80"
+                    cy="80"
                     id="progressCircle"
-                    style="stroke-dasharray: 565.48; stroke-dashoffset: 0;"
+                    style="stroke-dasharray: 439.82; stroke-dashoffset: 0;"
                 />
             `;
             
@@ -836,7 +849,7 @@
                 if (progressRing) {
                     const circleElement = document.getElementById('progressCircle');
                     if (circleElement) {
-                        const circumference = 2 * Math.PI * 90;
+                        const circumference = 2 * Math.PI * 70;
                         circleElement.style.strokeDashoffset = circumference; // 完全に空にする
                     }
                 }
@@ -869,6 +882,9 @@
 
         // 抽出プロセスを開始（準備ステップから）
         function startBrewingProcess() {
+            // 音声を初期化（ユーザータップ時に初期化することでiPhoneでも動作）
+            initAudio();
+            
             // リセットボタンを表示
             document.getElementById('resetButton').style.display = 'block';
             
@@ -915,20 +931,20 @@
                         stroke="#e0e0e0"
                         stroke-width="10"
                         fill="transparent"
-                        r="90"
-                        cx="100"
-                        cy="100"
+                        r="70"
+                        cx="80"
+                        cy="80"
                     />
                     <circle
                         class="progress-ring-circle"
                         stroke="var(--accent-color)"
                         stroke-width="10"
                         fill="transparent"
-                        r="90"
-                        cx="100"
-                        cy="100"
+                        r="70"
+                        cx="80"
+                        cy="80"
                         id="progressCircle"
-                        style="stroke-dasharray: 565.48; stroke-dashoffset: 565.48;"
+                        style="stroke-dasharray: 439.82; stroke-dashoffset: 439.82;"
                     />
                 `;
             }
@@ -972,13 +988,7 @@
         function startTimer() {
             const step = currentRecipe.steps[currentStep];
             timeLeft = step.duration;
-            beepCount = 0;
             
-            // 音声コンテキストを初期化
-            if (!audioContext) {
-                audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            }
-
             // プログレスリングwrapperを確実に表示
             const progressRingWrapper = document.querySelector('.progress-ring-wrapper');
             if (progressRingWrapper) {
@@ -994,26 +1004,26 @@
                         stroke="#e0e0e0"
                         stroke-width="10"
                         fill="transparent"
-                        r="90"
-                        cx="100"
-                        cy="100"
+                        r="70"
+                        cx="80"
+                        cy="80"
                     />
                     <circle
                         class="progress-ring-circle"
                         stroke="var(--accent-color)"
                         stroke-width="10"
                         fill="transparent"
-                        r="90"
-                        cx="100"
-                        cy="100"
+                        r="70"
+                        cx="80"
+                        cy="80"
                         id="progressCircle"
-                        style="stroke-dasharray: 565.48; stroke-dashoffset: 0;"
+                        style="stroke-dasharray: 439.82; stroke-dashoffset: 0;"
                     />
                 `;
             }
             
             const circleElement = document.getElementById('progressCircle');
-            const circumference = 2 * Math.PI * 90;
+            const circumference = 2 * Math.PI * 70;
             circleElement.style.strokeDasharray = circumference;
             circleElement.style.strokeDashoffset = 0;
 
@@ -1111,46 +1121,30 @@
 
         // ビープ音を鳴らす
         function playBeep() {
-            if (!audioContext) return;
+            // バイブレーション（iPhoneでより確実）
+            if (navigator.vibrate) {
+                navigator.vibrate(50);
+            }
             
-            const oscillator = audioContext.createOscillator();
-            const gainNode = audioContext.createGain();
-            
-            oscillator.connect(gainNode);
-            gainNode.connect(audioContext.destination);
-            
-            oscillator.frequency.value = 800;
-            oscillator.type = 'sine';
-            
-            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
-            
-            oscillator.start(audioContext.currentTime);
-            oscillator.stop(audioContext.currentTime + 0.1);
+            // 音も鳴らす
+            if (beepAudio) {
+                beepAudio.currentTime = 0;
+                beepAudio.play().catch(e => console.log('Beep play failed:', e));
+            }
         }
 
         // 完了音を鳴らす
         function playCompletionSound() {
-            if (!audioContext) return;
+            // バイブレーション（iPhoneでより確実）- 3回のパターン
+            if (navigator.vibrate) {
+                navigator.vibrate([100, 50, 100, 50, 100]);
+            }
             
-            const notes = [523.25, 659.25, 783.99]; // C, E, G
-            notes.forEach((freq, index) => {
-                const oscillator = audioContext.createOscillator();
-                const gainNode = audioContext.createGain();
-                
-                oscillator.connect(gainNode);
-                gainNode.connect(audioContext.destination);
-                
-                oscillator.frequency.value = freq;
-                oscillator.type = 'sine';
-                
-                const startTime = audioContext.currentTime + (index * 0.15);
-                gainNode.gain.setValueAtTime(0.3, startTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + 0.3);
-                
-                oscillator.start(startTime);
-                oscillator.stop(startTime + 0.3);
-            });
+            // 音も鳴らす
+            if (completionAudio) {
+                completionAudio.currentTime = 0;
+                completionAudio.play().catch(e => console.log('Completion sound play failed:', e));
+            }
         }
     </script>
 </body>
