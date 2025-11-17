@@ -1,0 +1,1157 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>コーヒー抽出レシピ</title>
+    <style>
+        :root {
+            --primary-color: #6F4E37;
+            --secondary-color: #3E2723;
+            --accent-color: #8B4513;
+            --step-bg: #FFF8DC;
+            --step-border: #D2691E;
+        }
+
+        html {
+            overflow-x: hidden;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+            transition: background 0.6s ease;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .input-group {
+            margin-bottom: 25px;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #555;
+        }
+
+        select, input {
+            width: 100%;
+            padding: 15px;
+            font-size: 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            background: #f8f8f8;
+            transition: all 0.3s;
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            background: white;
+        }
+
+        .result {
+            display: none;
+        }
+
+        .result.show {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .recipe-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            margin-bottom: 10px;
+            background: #f8f8f8;
+            border-radius: 12px;
+            border-left: 4px solid var(--accent-color);
+        }
+
+        .recipe-item.highlight {
+            background: linear-gradient(135deg, var(--accent-color) 0%, var(--primary-color) 100%);
+            color: white;
+            font-weight: 600;
+            border-left: none;
+        }
+
+        .recipe-label {
+            font-size: 15px;
+        }
+
+        .recipe-value {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .steps {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px dashed #e0e0e0;
+        }
+
+        .step {
+            margin-bottom: 15px;
+            padding: 12px;
+            background: var(--step-bg);
+            border-radius: 10px;
+            border-left: 4px solid var(--step-border);
+        }
+
+        .step-number {
+            display: inline-block;
+            width: 25px;
+            height: 25px;
+            background: var(--accent-color);
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 25px;
+            font-weight: 700;
+            margin-right: 10px;
+        }
+
+        .emoji {
+            font-size: 20px;
+            margin-right: 5px;
+        }
+
+        /* タイマー画面用のスタイル */
+        .timer-screen {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            z-index: 1000;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 20px;
+        }
+
+        .timer-screen.active {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+
+        .timer-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+            margin-bottom: 20px;
+        }
+
+        .back-button {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .timer-container {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            padding-bottom: 80px;
+            text-align: center;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+            position: relative;
+            min-height: 550px;
+        }
+
+        .timer-display {
+            font-size: 80px;
+            font-weight: 700;
+            color: var(--accent-color);
+            margin: 30px 0;
+            font-variant-numeric: tabular-nums;
+            transition: all 0.3s;
+        }
+
+        .timer-display.warning {
+            color: #FF6B6B;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .progress-ring {
+            transform: rotate(-90deg);
+            margin: 0;
+            display: block;
+            position: relative;
+            left: 0;
+            right: 0;
+        }
+
+        .progress-ring-wrapper {
+            width: 200px;
+            height: 200px;
+            margin: 20px auto;
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .progress-ring-circle {
+            transition: stroke-dashoffset 0.5s;
+            transform-origin: 50% 50%;
+        }
+
+        .current-step {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--accent-color);
+            margin-bottom: 15px;
+        }
+
+        .step-instruction {
+            font-size: 18px;
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .timer-controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .timer-button {
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .timer-button:active {
+            transform: scale(0.95);
+        }
+
+        .reset-button {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: #FF6B6B;
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            transition: all 0.3s;
+        }
+
+        .reset-button:active {
+            transform: scale(0.95);
+        }
+
+        .next-step-info {
+            background: #f8f8f8;
+            padding: 10px 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            margin-bottom: 60px;
+            font-size: 14px;
+            max-width: 300px;
+            margin-left: auto;
+            margin-right: auto;
+            box-shadow: 0 0 15px rgba(139, 69, 19, 0.3);
+        }
+
+        .start-timer-button {
+            width: 100%;
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.3s;
+        }
+
+        .start-timer-button:active {
+            transform: scale(0.98);
+        }
+
+        .completion-screen {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .completion-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+        }
+
+        .completion-title {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--accent-color);
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>☕ コーヒーレシピ計算</h1>
+            <p>焙煎度と豆の量を入力してください</p>
+        </div>
+
+        <div class="card">
+            <div class="input-group">
+                <label for="roast">🔥 焙煎度</label>
+                <select id="roast" onchange="calculate()">
+                    <option value="">選択してください</option>
+                    <option value="medium">ミディアム（中浅煎り）</option>
+                    <option value="high">ハイ（中煎り）</option>
+                    <option value="city">シティ（中深煎り）</option>
+                    <option value="fullcity">フルシティ（深煎り）</option>
+                    <option value="french">フレンチ（極深煎り）</option>
+                    <option value="italian">イタリアン（極深煎り）</option>
+                </select>
+            </div>
+
+            <div class="input-group">
+                <label for="beans">⚖️ 豆の量（g）</label>
+                <input type="number" id="beans" placeholder="例: 14" min="1" max="100" oninput="calculate()">
+            </div>
+        </div>
+
+        <div id="result" class="card result">
+            <div class="recipe-item highlight">
+                <span class="recipe-label"><span class="emoji">☕</span>最終出来上がり</span>
+                <span class="recipe-value" id="final">0 g</span>
+            </div>
+
+            <div class="recipe-item">
+                <span class="recipe-label">1投目（蒸らし）</span>
+                <span class="recipe-value" id="pour1">0 g</span>
+            </div>
+
+            <div class="recipe-item">
+                <span class="recipe-label">2投目まで</span>
+                <span class="recipe-value" id="pour2">0 g</span>
+            </div>
+
+            <div class="recipe-item">
+                <span class="recipe-label">3投目まで（抽出完了）</span>
+                <span class="recipe-value" id="pour3">0 g</span>
+            </div>
+
+            <div class="recipe-item">
+                <span class="recipe-label">追加のお湯</span>
+                <span class="recipe-value" id="extra">0 g</span>
+            </div>
+
+            <div class="recipe-item">
+                <span class="recipe-label">⏱️ 抽出時間</span>
+                <span class="recipe-value" id="brewTime">0 分以内</span>
+            </div>
+
+            <div class="steps">
+                <div class="step">
+                    <span class="step-number">1</span>
+                    <span id="step1">豆を挽いてセットする</span>
+                </div>
+                <div class="step">
+                    <span class="step-number">2</span>
+                    <span id="step2">1投目のお湯で蒸らす</span>
+                </div>
+                <div class="step">
+                    <span class="step-number">3</span>
+                    <span id="step3">45秒後、2投目を注ぐ</span>
+                </div>
+                <div class="step">
+                    <span class="step-number">4</span>
+                    <span id="step4">1分半後、3投目を注いで抽出完了</span>
+                </div>
+                <div class="step">
+                    <span class="step-number">5</span>
+                    <span id="step5">追加のお湯を注いで完成</span>
+                </div>
+            </div>
+
+            <button class="start-timer-button" onclick="startTimerMode()">
+                ⏱️ タイマー抽出を開始
+            </button>
+        </div>
+
+        <!-- タイマー画面 -->
+        <div id="timerScreen" class="timer-screen">
+            <div class="timer-header">
+                <button class="back-button" onclick="exitTimer()">← 戻る</button>
+                <h2 style="margin: 0;">タイマー抽出</h2>
+                <div style="width: 60px;"></div>
+            </div>
+
+            <div class="timer-container">
+                <button class="reset-button" id="resetButton" onclick="resetTimer()" style="display: none;">🔄 リセット</button>
+
+                <div class="current-step" id="timerStepTitle">準備</div>
+                <div class="step-instruction" id="timerStepInstruction">豆を挽いてセットしてください</div>
+
+                <div style="background: #f0f0f0; padding: 10px; border-radius: 10px; margin-bottom: 20px;">
+                    <div style="font-size: 14px; color: #666;">総抽出時間</div>
+                    <div style="font-size: 24px; font-weight: 700; color: var(--accent-color);" id="totalTime">0:00</div>
+                </div>
+
+                <div class="progress-ring-wrapper">
+                    <svg class="progress-ring" width="200" height="200" id="progressRing">
+                    <circle
+                        stroke="#e0e0e0"
+                        stroke-width="10"
+                        fill="transparent"
+                        r="90"
+                        cx="100"
+                        cy="100"
+                    />
+                    <circle
+                        class="progress-ring-circle"
+                        stroke="var(--accent-color)"
+                        stroke-width="10"
+                        fill="transparent"
+                        r="90"
+                        cx="100"
+                        cy="100"
+                        id="progressCircle"
+                        style="stroke-dasharray: 565.48; stroke-dashoffset: 0;"
+                    />
+                </svg>
+                </div>
+
+                <div class="timer-display" id="timerDisplay">--:--</div>
+
+                <div id="timerControls" class="timer-controls">
+                    <button class="timer-button" onclick="startTimer()">開始</button>
+                </div>
+
+                <div class="next-step-info" id="nextStepInfo" style="display: none;">
+                    <strong>次の手順：</strong><br>
+                    <span id="nextStepText"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 焙煎度ごとの設定
+        const roastConfig = {
+            medium: {
+                name: 'ミディアム',
+                ratio: 16.6,
+                extractRatio: 16.6,
+                brewTime: 3,
+                pour1Ratio: 2.5,
+                pour2Ratio: 10,
+                pour3Ratio: 16.6,
+                colors: {
+                    primary: '#C19A6B',
+                    secondary: '#A0826D',
+                    accent: '#D2B48C',
+                    stepBg: '#FFF8DC',
+                    stepBorder: '#DEB887'
+                }
+            },
+            high: {
+                name: 'ハイ',
+                ratio: 16.6,
+                extractRatio: 14,
+                brewTime: 3,
+                pour1Ratio: 2.5,
+                pour2Ratio: 8.5,
+                pour3Ratio: 14,
+                colors: {
+                    primary: '#A0826D',
+                    secondary: '#8B7355',
+                    accent: '#BC8F8F',
+                    stepBg: '#FFF5EE',
+                    stepBorder: '#D2691E'
+                }
+            },
+            city: {
+                name: 'シティ',
+                ratio: 16.6,
+                extractRatio: 12,
+                brewTime: 3,
+                pour1Ratio: 2.5,
+                pour2Ratio: 7,
+                pour3Ratio: 12,
+                colors: {
+                    primary: '#8B4513',
+                    secondary: '#654321',
+                    accent: '#A0522D',
+                    stepBg: '#FFF0E5',
+                    stepBorder: '#CD853F'
+                }
+            },
+            fullcity: {
+                name: 'フルシティ',
+                ratio: 16.6,
+                extractRatio: 10,
+                brewTime: 3,
+                pour1Ratio: 2.1,
+                pour2Ratio: 5.7,
+                pour3Ratio: 10,
+                colors: {
+                    primary: '#6F4E37',
+                    secondary: '#583822',
+                    accent: '#8B4513',
+                    stepBg: '#FAEBD7',
+                    stepBorder: '#A0522D'
+                }
+            },
+            french: {
+                name: 'フレンチ',
+                ratio: 16.6,
+                extractRatio: 9,
+                brewTime: 3,
+                pour1Ratio: 2.1,
+                pour2Ratio: 5.7,
+                pour3Ratio: 9,
+                colors: {
+                    primary: '#4A3728',
+                    secondary: '#2F2419',
+                    accent: '#6F4E37',
+                    stepBg: '#F5DEB3',
+                    stepBorder: '#8B4513'
+                }
+            },
+            italian: {
+                name: 'イタリアン',
+                ratio: 16.6,
+                extractRatio: 8,
+                brewTime: 3,
+                pour1Ratio: 2.1,
+                pour2Ratio: 4.8,
+                pour3Ratio: 8,
+                colors: {
+                    primary: '#3E2723',
+                    secondary: '#1C0F0D',
+                    accent: '#4A3728',
+                    stepBg: '#E8D5C4',
+                    stepBorder: '#6F4E37'
+                }
+            }
+        };
+
+        // 5g単位に丸める関数
+        function roundToNearest5(value) {
+            return Math.round(value / 5) * 5;
+        }
+
+        // テーマカラーを変更する関数
+        function changeTheme(colors) {
+            const root = document.documentElement;
+            root.style.setProperty('--primary-color', colors.primary);
+            root.style.setProperty('--secondary-color', colors.secondary);
+            root.style.setProperty('--accent-color', colors.accent);
+            root.style.setProperty('--step-bg', colors.stepBg);
+            root.style.setProperty('--step-border', colors.stepBorder);
+        }
+
+        function calculate() {
+            const roastSelect = document.getElementById('roast');
+            const beansInput = document.getElementById('beans');
+            const resultDiv = document.getElementById('result');
+
+            const roast = roastSelect.value;
+            const beans = parseFloat(beansInput.value);
+
+            // 入力チェック
+            if (!roast || !beans || beans <= 0) {
+                resultDiv.classList.remove('show');
+                return;
+            }
+
+            const config = roastConfig[roast];
+
+            // テーマカラーを変更
+            changeTheme(config.colors);
+
+            // 計算（5g単位に丸める）
+            const finalAmount = roundToNearest5(beans * config.ratio);
+            const pour1 = roundToNearest5(beans * config.pour1Ratio);
+            const pour2 = roundToNearest5(beans * config.pour2Ratio);
+            const pour3 = roundToNearest5(beans * config.pour3Ratio);
+            const extraWater = finalAmount - pour3;
+
+            // 結果表示
+            document.getElementById('final').textContent = finalAmount + ' g';
+            document.getElementById('pour1').textContent = pour1 + ' g';
+            document.getElementById('pour2').textContent = pour2 + ' g';
+            document.getElementById('pour3').textContent = pour3 + ' g';
+            document.getElementById('extra').textContent = extraWater + ' g';
+            document.getElementById('brewTime').textContent = config.brewTime + ' 分以内';
+
+            // ステップ更新
+            document.getElementById('step1').textContent = `${beans}gの豆を挽いてセットする`;
+            document.getElementById('step2').textContent = `${pour1}gのお湯を注ぐ（蒸らし開始）`;
+            document.getElementById('step3').textContent = `45秒後、合計${pour2}gまでお湯を注ぐ`;
+            document.getElementById('step4').textContent = `1分半後、合計${pour3}gまでお湯を注いで抽出完了`;
+            document.getElementById('step5').textContent = extraWater > 0 
+                ? `${extraWater}gのお湯を追加して完成（合計${finalAmount}g）` 
+                : `抽出完了！そのまま完成（${finalAmount}g）`;
+
+            // 結果を表示
+            resultDiv.classList.add('show');
+        }
+
+        // タイマー関連の変数
+        let currentRecipe = null;
+        let currentStep = 0;
+        let timerInterval = null;
+        let totalTimeInterval = null;
+        let timeLeft = 0;
+        let totalTimeElapsed = 0;
+        let audioContext = null;
+        let beepCount = 0;
+
+        // タイマーモードを開始
+        function startTimerMode() {
+            const roastSelect = document.getElementById('roast');
+            const beansInput = document.getElementById('beans');
+            const roast = roastSelect.value;
+            const beans = parseFloat(beansInput.value);
+
+            if (!roast || !beans || beans <= 0) {
+                alert('焙煎度と豆の量を入力してください');
+                return;
+            }
+
+            const config = roastConfig[roast];
+            const finalAmount = roundToNearest5(beans * config.ratio);
+            const pour1 = roundToNearest5(beans * config.pour1Ratio);
+            const pour2 = roundToNearest5(beans * config.pour2Ratio);
+            const pour3 = roundToNearest5(beans * config.pour3Ratio);
+            const extraWater = finalAmount - pour3;
+
+            currentRecipe = {
+                beans: beans,
+                roast: config.name,
+                steps: [
+                    {
+                        title: '準備',
+                        instruction: `${beans}gの豆を挽いてセットしてください`,
+                        duration: 0,
+                        action: ''
+                    },
+                    {
+                        title: '1投目（蒸らし）',
+                        instruction: `${pour1}gのお湯を注いでください`,
+                        duration: 45,
+                        action: `${pour1}g注ぐ`
+                    },
+                    {
+                        title: '2投目',
+                        instruction: `合計${pour2}gまでお湯を注いでください`,
+                        duration: 90,
+                        action: `合計${pour2}gまで`
+                    },
+                    {
+                        title: '3投目（抽出完了）',
+                        instruction: `合計${pour3}gまでお湯を注いでください`,
+                        duration: 0,
+                        action: `合計${pour3}gまで`
+                    },
+                    {
+                        title: '追加のお湯',
+                        instruction: extraWater > 0 ? `${extraWater}gのお湯を追加してください` : 'そのまま完成です！',
+                        duration: 0,
+                        action: extraWater > 0 ? `${extraWater}g追加` : '完成'
+                    }
+                ]
+            };
+
+            currentStep = 0;
+            totalTimeElapsed = 0;
+            document.getElementById('timerScreen').classList.add('active');
+            document.getElementById('totalTime').textContent = '0:00';
+            
+            // プログレスリングwrapperを表示
+            const progressRingWrapper = document.querySelector('.progress-ring-wrapper');
+            if (progressRingWrapper) {
+                progressRingWrapper.style.display = 'flex';
+            }
+            
+            // プログレスリングを初期化
+            const progressRing = document.getElementById('progressRing');
+            progressRing.innerHTML = `
+                <circle
+                    stroke="#e0e0e0"
+                    stroke-width="10"
+                    fill="transparent"
+                    r="90"
+                    cx="100"
+                    cy="100"
+                />
+                <circle
+                    class="progress-ring-circle"
+                    stroke="var(--accent-color)"
+                    stroke-width="10"
+                    fill="transparent"
+                    r="90"
+                    cx="100"
+                    cy="100"
+                    id="progressCircle"
+                    style="stroke-dasharray: 565.48; stroke-dashoffset: 0;"
+                />
+            `;
+            
+            updateTimerDisplay();
+        }
+
+        // タイマー画面を閉じる
+        function exitTimer() {
+            if (timerInterval) {
+                if (!confirm('抽出を中止しますか？')) {
+                    return;
+                }
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+            if (totalTimeInterval) {
+                clearInterval(totalTimeInterval);
+                totalTimeInterval = null;
+            }
+            
+            // リセットボタンを非表示
+            document.getElementById('resetButton').style.display = 'none';
+            
+            document.getElementById('timerScreen').classList.remove('active');
+            currentStep = 0;
+            currentRecipe = null;
+            totalTimeElapsed = 0;
+        }
+
+        // タイマー表示を更新
+        function updateTimerDisplay() {
+            const step = currentRecipe.steps[currentStep];
+            document.getElementById('timerStepTitle').textContent = step.title;
+            document.getElementById('timerStepInstruction').textContent = step.instruction;
+
+            if (step.duration > 0) {
+                // duration があるステップでは、総時間の独立カウントを停止
+                if (totalTimeInterval) {
+                    clearInterval(totalTimeInterval);
+                    totalTimeInterval = null;
+                }
+                
+                timeLeft = step.duration;
+                document.getElementById('timerDisplay').textContent = formatTime(timeLeft);
+                
+                // 次のステップ情報を表示
+                if (currentStep < currentRecipe.steps.length - 1) {
+                    const nextStep = currentRecipe.steps[currentStep + 1];
+                    document.getElementById('nextStepText').textContent = nextStep.action;
+                    document.getElementById('nextStepInfo').style.display = 'block';
+                } else {
+                    document.getElementById('nextStepInfo').style.display = 'none';
+                }
+            } else {
+                // duration が 0 のステップでは総時間だけ進める
+                if (!totalTimeInterval && currentStep > 0) {
+                    totalTimeInterval = setInterval(() => {
+                        totalTimeElapsed++;
+                        document.getElementById('totalTime').textContent = formatTime(totalTimeElapsed);
+                    }, 1000);
+                }
+                
+                // duration が 0 のステップではプログレスリングをリセット
+                const progressRing = document.getElementById('progressRing');
+                if (progressRing) {
+                    const circleElement = document.getElementById('progressCircle');
+                    if (circleElement) {
+                        const circumference = 2 * Math.PI * 90;
+                        circleElement.style.strokeDashoffset = circumference; // 完全に空にする
+                    }
+                }
+                
+                document.getElementById('timerDisplay').textContent = currentStep === 0 ? '準備完了' : '準備完了';
+                if (currentStep === currentRecipe.steps.length - 1) {
+                    // 最後のステップ
+                    showCompletion();
+                } else if (currentStep === 0) {
+                    // 最初の準備ステップ
+                    document.getElementById('timerControls').innerHTML = 
+                        '<button class="timer-button" onclick="startBrewingProcess()">開始</button>';
+                    if (currentStep < currentRecipe.steps.length - 1) {
+                        const nextStepData = currentRecipe.steps[currentStep + 1];
+                        document.getElementById('nextStepText').textContent = nextStepData.action;
+                        document.getElementById('nextStepInfo').style.display = 'block';
+                    }
+                } else {
+                    // duration が 0 のステップ（追加のお湯など）
+                    document.getElementById('timerControls').innerHTML = 
+                        '<button class="timer-button" onclick="nextStep()">次へ</button>';
+                    if (currentStep < currentRecipe.steps.length - 1) {
+                        const nextStepData = currentRecipe.steps[currentStep + 1];
+                        document.getElementById('nextStepText').textContent = nextStepData.action;
+                        document.getElementById('nextStepInfo').style.display = 'block';
+                    }
+                }
+            }
+        }
+
+        // 抽出プロセスを開始（準備ステップから）
+        function startBrewingProcess() {
+            // リセットボタンを表示
+            document.getElementById('resetButton').style.display = 'block';
+            
+            // 次のステップへ進み、自動的にタイマー開始
+            nextStep();
+        }
+
+        // タイマーをリセット
+        function resetTimer() {
+            // すべてのタイマーを確実に停止
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+            if (totalTimeInterval) {
+                clearInterval(totalTimeInterval);
+                totalTimeInterval = null;
+            }
+            
+            // 状態を完全にリセット
+            currentStep = 0;
+            totalTimeElapsed = 0;
+            timeLeft = 0;
+            
+            // 表示をリセット
+            document.getElementById('totalTime').textContent = '0:00';
+            document.getElementById('timerDisplay').textContent = '準備完了';
+            document.getElementById('timerDisplay').classList.remove('warning');
+            
+            // リセットボタンを非表示
+            document.getElementById('resetButton').style.display = 'none';
+            
+            // プログレスリングwrapperを表示
+            const progressRingWrapper = document.querySelector('.progress-ring-wrapper');
+            if (progressRingWrapper) {
+                progressRingWrapper.style.display = 'flex';
+            }
+            
+            // プログレスリングを完全に再初期化
+            const progressRing = document.getElementById('progressRing');
+            if (progressRing) {
+                progressRing.innerHTML = `
+                    <circle
+                        stroke="#e0e0e0"
+                        stroke-width="10"
+                        fill="transparent"
+                        r="90"
+                        cx="100"
+                        cy="100"
+                    />
+                    <circle
+                        class="progress-ring-circle"
+                        stroke="var(--accent-color)"
+                        stroke-width="10"
+                        fill="transparent"
+                        r="90"
+                        cx="100"
+                        cy="100"
+                        id="progressCircle"
+                        style="stroke-dasharray: 565.48; stroke-dashoffset: 565.48;"
+                    />
+                `;
+            }
+            
+            // currentRecipeが存在する場合のみ、準備ステップの内容を表示
+            if (currentRecipe && currentRecipe.steps && currentRecipe.steps.length > 0) {
+                const step = currentRecipe.steps[0];
+                document.getElementById('timerStepTitle').textContent = step.title;
+                document.getElementById('timerStepInstruction').textContent = step.instruction;
+                
+                // 開始ボタンを表示
+                document.getElementById('timerControls').innerHTML = 
+                    '<button class="timer-button" onclick="startBrewingProcess()">開始</button>';
+                
+                // 次のステップ情報を表示
+                if (currentRecipe.steps.length > 1) {
+                    const nextStepData = currentRecipe.steps[1];
+                    document.getElementById('nextStepText').textContent = nextStepData.action;
+                    document.getElementById('nextStepInfo').style.display = 'block';
+                } else {
+                    document.getElementById('nextStepInfo').style.display = 'none';
+                }
+            } else {
+                // currentRecipeがない場合（念のため）
+                document.getElementById('timerStepTitle').textContent = '準備';
+                document.getElementById('timerStepInstruction').textContent = '豆を挽いてセットしてください';
+                document.getElementById('timerControls').innerHTML = 
+                    '<button class="timer-button" onclick="startBrewingProcess()">開始</button>';
+                document.getElementById('nextStepInfo').style.display = 'none';
+            }
+        }
+
+        // 時間を分:秒形式にフォーマット
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        // タイマーを開始
+        function startTimer() {
+            const step = currentRecipe.steps[currentStep];
+            timeLeft = step.duration;
+            beepCount = 0;
+            
+            // 音声コンテキストを初期化
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+
+            // プログレスリングwrapperを確実に表示
+            const progressRingWrapper = document.querySelector('.progress-ring-wrapper');
+            if (progressRingWrapper) {
+                progressRingWrapper.style.display = 'flex';
+            }
+            
+            const progressRing = document.getElementById('progressRing');
+            const circle = document.getElementById('progressCircle');
+            if (!circle) {
+                // 円が存在しない場合は再作成
+                progressRing.innerHTML = `
+                    <circle
+                        stroke="#e0e0e0"
+                        stroke-width="10"
+                        fill="transparent"
+                        r="90"
+                        cx="100"
+                        cy="100"
+                    />
+                    <circle
+                        class="progress-ring-circle"
+                        stroke="var(--accent-color)"
+                        stroke-width="10"
+                        fill="transparent"
+                        r="90"
+                        cx="100"
+                        cy="100"
+                        id="progressCircle"
+                        style="stroke-dasharray: 565.48; stroke-dashoffset: 0;"
+                    />
+                `;
+            }
+            
+            const circleElement = document.getElementById('progressCircle');
+            const circumference = 2 * Math.PI * 90;
+            circleElement.style.strokeDasharray = circumference;
+            circleElement.style.strokeDashoffset = 0;
+
+            document.getElementById('timerControls').innerHTML = 
+                '<button class="timer-button" onclick="skipStep()">スキップ</button>';
+
+            timerInterval = setInterval(() => {
+                // カウントダウンと総時間を同時に更新（同期）
+                timeLeft--;
+                totalTimeElapsed++;
+                document.getElementById('totalTime').textContent = formatTime(totalTimeElapsed);
+                
+                const progress = (step.duration - timeLeft) / step.duration;
+                const offset = circumference * (1 - progress);
+                circleElement.style.strokeDashoffset = offset;
+
+                document.getElementById('timerDisplay').textContent = formatTime(timeLeft);
+
+                // 5秒前からビープ音とアニメーション
+                if (timeLeft <= 5 && timeLeft > 0) {
+                    document.getElementById('timerDisplay').classList.add('warning');
+                    playBeep();
+                } else {
+                    document.getElementById('timerDisplay').classList.remove('warning');
+                }
+
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    timerInterval = null;
+                    playCompletionSound();
+                    setTimeout(() => {
+                        nextStep();
+                    }, 500);
+                }
+            }, 1000);
+        }
+
+        // ステップをスキップ
+        function skipStep() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+            document.getElementById('timerDisplay').classList.remove('warning');
+            nextStep();
+        }
+
+        // 次のステップへ
+        function nextStep() {
+            document.getElementById('timerDisplay').classList.remove('warning');
+            currentStep++;
+            if (currentStep < currentRecipe.steps.length) {
+                updateTimerDisplay();
+                
+                // 次のステップに期間がある場合は自動開始
+                const nextStepData = currentRecipe.steps[currentStep];
+                if (nextStepData.duration > 0) {
+                    setTimeout(() => {
+                        startTimer();
+                    }, 100);
+                }
+            } else {
+                showCompletion();
+            }
+        }
+
+        // 完了画面を表示
+        function showCompletion() {
+            // 総時間のカウントを停止
+            if (totalTimeInterval) {
+                clearInterval(totalTimeInterval);
+                totalTimeInterval = null;
+            }
+            
+            // リセットボタンを非表示
+            document.getElementById('resetButton').style.display = 'none';
+            
+            document.getElementById('timerStepTitle').textContent = '完成！';
+            document.getElementById('timerStepInstruction').textContent = '';
+            document.getElementById('timerDisplay').innerHTML = 
+                '<div class="completion-screen">' +
+                '<div class="completion-icon">☕</div>' +
+                '<div style="color: var(--accent-color); font-size: 28px; font-weight: 600; margin-top: 20px;">Enjoy your coffee time!</div>' +
+                '</div>';
+            document.getElementById('timerControls').innerHTML = 
+                '<button class="timer-button" onclick="exitTimer()">閉じる</button>';
+            document.getElementById('nextStepInfo').style.display = 'none';
+            
+            // プログレスリングを非表示
+            const progressRingWrapper = document.querySelector('.progress-ring-wrapper');
+            if (progressRingWrapper) {
+                progressRingWrapper.style.display = 'none';
+            }
+        }
+
+        // ビープ音を鳴らす
+        function playBeep() {
+            if (!audioContext) return;
+            
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.value = 800;
+            oscillator.type = 'sine';
+            
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.1);
+        }
+
+        // 完了音を鳴らす
+        function playCompletionSound() {
+            if (!audioContext) return;
+            
+            const notes = [523.25, 659.25, 783.99]; // C, E, G
+            notes.forEach((freq, index) => {
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.value = freq;
+                oscillator.type = 'sine';
+                
+                const startTime = audioContext.currentTime + (index * 0.15);
+                gainNode.gain.setValueAtTime(0.3, startTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + 0.3);
+                
+                oscillator.start(startTime);
+                oscillator.stop(startTime + 0.3);
+            });
+        }
+    </script>
+</body>
+</html>
