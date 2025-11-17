@@ -89,9 +89,7 @@
         select option {
             font-size: 14px;
             padding: 8px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            line-height: 1.4;
         }
 
         select:focus, input:focus {
@@ -385,12 +383,12 @@
                 <label for="roast">🔥 焙煎度</label>
                 <select id="roast" onchange="calculate()">
                     <option value="">選択してください</option>
-                    <option value="medium">ミディアム（中浅煎り）</option>
-                    <option value="high">ハイ（中煎り）</option>
-                    <option value="city">シティ（中深煎り）</option>
-                    <option value="fullcity">フルシティ（深煎り）</option>
-                    <option value="french">フレンチ（極深煎り）</option>
-                    <option value="italian">イタリアン（極深煎り）</option>
+                    <option value="medium">ミディアム&#10;（中浅煎り）</option>
+                    <option value="high">ハイ&#10;（中煎り）</option>
+                    <option value="city">シティ&#10;（中深煎り）</option>
+                    <option value="fullcity">フルシティ&#10;（深煎り）</option>
+                    <option value="french">フレンチ&#10;（極深煎り）</option>
+                    <option value="italian">イタリアン&#10;（極深煎り）</option>
                 </select>
             </div>
 
