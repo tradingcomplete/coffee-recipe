@@ -683,7 +683,18 @@
         // 音声を初期化（ユーザーインタラクション後に呼ばれる）
         function initAudio() {
             if (!audioContext) {
-                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                try {
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    // iOSのスタンドアロンモード対策: resumeを明示的に呼ぶ
+                    if (audioContext.state === 'suspended') {
+                        audioContext.resume();
+                    }
+                    console.log('AudioContext initialized:', audioContext.state);
+                } catch (e) {
+                    console.error('Failed to initialize AudioContext:', e);
+                }
+            } else if (audioContext.state === 'suspended') {
+                audioContext.resume();
             }
         }
 
@@ -698,6 +709,9 @@
                 alert('焙煎度と豆の量を入力してください');
                 return;
             }
+
+            // タイマー画面を開く際にもAudioContextを初期化（スタンドアロンモード対策）
+            initAudio();
 
             const config = roastConfig[roast];
             const finalAmount = roundToNearest5(beans * config.ratio);
@@ -878,6 +892,13 @@
         function startBrewingProcess() {
             // 音声を初期化（ユーザータップ時に初期化することでiPhoneでも動作）
             initAudio();
+            
+            // スタンドアロンモード対策: 少し待ってから再度resume
+            setTimeout(() => {
+                if (audioContext && audioContext.state === 'suspended') {
+                    audioContext.resume();
+                }
+            }, 100);
             
             // リセットボタンを表示
             document.getElementById('resetButton').style.display = 'block';
@@ -1138,6 +1159,11 @@
             
             // クリーンなビープ音を生成
             if (audioContext) {
+                // AudioContextがsuspendedの場合はresume
+                if (audioContext.state === 'suspended') {
+                    audioContext.resume();
+                }
+                
                 try {
                     const oscillator = audioContext.createOscillator();
                     const gainNode = audioContext.createGain();
@@ -1170,6 +1196,11 @@
             
             // 完了メロディ（ド・ミ・ソ）
             if (audioContext) {
+                // AudioContextがsuspendedの場合はresume
+                if (audioContext.state === 'suspended') {
+                    audioContext.resume();
+                }
+                
                 try {
                     const notes = [523.25, 659.25, 783.99]; // C5, E5, G5
                     notes.forEach((freq, index) => {
