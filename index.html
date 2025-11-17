@@ -438,11 +438,11 @@
                 </div>
                 <div class="step">
                     <span class="step-number">4</span>
-                    <span id="step4">さらに45秒後、3投目を注いで抽出完了</span>
+                    <span id="step4">さらに45秒後、3投目を注ぐ</span>
                 </div>
                 <div class="step">
                     <span class="step-number">5</span>
-                    <span id="step5">追加のお湯を注いで完成</span>
+                    <span id="step5">45秒後、お湯が落ちきったら追加のお湯を注いで完成</span>
                 </div>
             </div>
 
@@ -662,10 +662,10 @@
             document.getElementById('step1').textContent = `${beans}gの豆を挽いてセットする`;
             document.getElementById('step2').textContent = `${pour1}gのお湯を注ぐ（蒸らし開始）`;
             document.getElementById('step3').textContent = `45秒後、合計${pour2}gまでお湯を注ぐ`;
-            document.getElementById('step4').textContent = `さらに45秒後、合計${pour3}gまでお湯を注いで抽出完了`;
+            document.getElementById('step4').textContent = `さらに45秒後、合計${pour3}gまでお湯を注ぐ`;
             document.getElementById('step5').textContent = extraWater > 0 
-                ? `${extraWater}gのお湯を追加して完成（合計${finalAmount}g）` 
-                : `抽出完了！そのまま完成（${finalAmount}g）`;
+                ? `45秒後、お湯が落ちきったら${extraWater}gのお湯を追加して完成（合計${finalAmount}g）`
+                : `45秒後、お湯が落ちきったら完成（${finalAmount}g）`;
 
             // 結果を表示
             resultDiv.classList.add('show');
@@ -709,6 +709,7 @@
             currentRecipe = {
                 beans: beans,
                 roast: config.name,
+                extraWater: extraWater,
                 steps: [
                     {
                         title: '準備',
@@ -729,9 +730,9 @@
                         action: `合計${pour2}gまで`
                     },
                     {
-                        title: '3投目（抽出完了）',
+                        title: '3投目（抽出中）',
                         instruction: `合計${pour3}gまでお湯を注いでください`,
-                        duration: 0,
+                        duration: 45,
                         action: `合計${pour3}gまで`
                     },
                     {
@@ -1096,11 +1097,27 @@
             
             document.getElementById('timerStepTitle').textContent = '完成！';
             document.getElementById('timerStepInstruction').textContent = '';
-            document.getElementById('timerDisplay').innerHTML = 
-                '<div class="completion-screen">' +
-                '<div class="completion-icon">☕</div>' +
-                '<div style="color: var(--accent-color); font-size: 20px; font-weight: 600; margin-top: 5px; white-space: nowrap;">Enjoy your coffee time!</div>' +
-                '</div>';
+            
+            // 追加のお湯がある場合は詳細情報を表示
+            let completionHTML = '';
+            if (currentRecipe.extraWater > 0) {
+                completionHTML = 
+                    '<div class="completion-screen">' +
+                    '<div style="color: var(--accent-color); font-size: 18px; font-weight: 600; margin-bottom: 15px;">お湯' + currentRecipe.extraWater + 'g追加で完成！</div>' +
+                    '<div style="font-size: 14px; color: #666; margin-bottom: 5px;">総抽出時間</div>' +
+                    '<div style="font-size: 24px; font-weight: 700; color: var(--accent-color); margin-bottom: 20px;">' + formatTime(totalTimeElapsed) + '</div>' +
+                    '<div class="completion-icon">☕</div>' +
+                    '<div style="color: var(--accent-color); font-size: 20px; font-weight: 600; margin-top: 5px; white-space: nowrap;">Enjoy your coffee time!</div>' +
+                    '</div>';
+            } else {
+                completionHTML = 
+                    '<div class="completion-screen">' +
+                    '<div class="completion-icon">☕</div>' +
+                    '<div style="color: var(--accent-color); font-size: 20px; font-weight: 600; margin-top: 5px; white-space: nowrap;">Enjoy your coffee time!</div>' +
+                    '</div>';
+            }
+            
+            document.getElementById('timerDisplay').innerHTML = completionHTML;
             document.getElementById('timerControls').innerHTML = 
                 '<button class="timer-button" onclick="exitTimer()" style="margin-top: 10px;">閉じる</button>';
             document.getElementById('nextStepInfo').style.display = 'none';
