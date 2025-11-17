@@ -615,9 +615,9 @@
             }
         };
 
-        // 5g単位に丸める関数
+        // 5g単位に切り下げる関数
         function roundToNearest5(value) {
-            return Math.round(value / 5) * 5;
+            return Math.floor(value / 5) * 5;
         }
 
         // テーマカラーを変更する関数
