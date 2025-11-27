@@ -1274,17 +1274,15 @@
             if (currentRecipe.extraWater > 0) {
                 completionHTML = 
                     '<div class="completion-screen">' +
-                    '<div style="color: var(--accent-color); font-size: 18px; font-weight: 600; margin-bottom: 15px;">お湯' + currentRecipe.extraWater + 'g追加で完成！</div>' +
-                    '<div style="font-size: 14px; color: #666; margin-bottom: 5px;">総抽出時間</div>' +
-                    '<div style="font-size: 24px; font-weight: 700; color: var(--accent-color); margin-bottom: 20px;">' + formatTime(totalTimeElapsed) + '</div>' +
-                    '<div class="completion-icon">☕</div>' +
-                    '<div style="color: var(--accent-color); font-size: 20px; font-weight: 600; margin-top: 5px; white-space: nowrap;">Enjoy your coffee time!</div>' +
+                    '<div style="color: var(--accent-color); font-size: 22px; font-weight: 600; margin-bottom: 20px;">お湯' + currentRecipe.extraWater + 'g追加で完成！</div>' +
+                    '<div class="completion-icon" style="font-size: 70px;">☕</div>' +
+                    '<div style="color: var(--accent-color); font-size: 24px; font-weight: 600; margin-top: 10px; white-space: nowrap;">Enjoy your coffee time!</div>' +
                     '</div>';
             } else {
                 completionHTML = 
                     '<div class="completion-screen">' +
-                    '<div class="completion-icon">☕</div>' +
-                    '<div style="color: var(--accent-color); font-size: 20px; font-weight: 600; margin-top: 5px; white-space: nowrap;">Enjoy your coffee time!</div>' +
+                    '<div class="completion-icon" style="font-size: 70px;">☕</div>' +
+                    '<div style="color: var(--accent-color); font-size: 24px; font-weight: 600; margin-top: 10px; white-space: nowrap;">Enjoy your coffee time!</div>' +
                     '</div>';
             }
             
