@@ -267,16 +267,17 @@
         }
 
         .current-step {
-            font-size: 20px;
+            font-size: 26px;
             font-weight: 600;
             color: var(--accent-color);
-            margin-bottom: 5px;
+            margin-bottom: 8px;
         }
 
         .step-instruction {
-            font-size: 16px;
+            font-size: 22px;
             color: #666;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
+            font-weight: 500;
         }
 
         .timer-controls {
@@ -324,15 +325,27 @@
 
         .next-step-info {
             background: #f8f8f8;
-            padding: 6px 10px;
-            border-radius: 8px;
-            margin-top: 8px;
+            padding: 12px 15px;
+            border-radius: 10px;
+            margin-top: 15px;
             margin-bottom: 45px;
-            font-size: 12px;
-            max-width: 260px;
+            font-size: 18px;
+            max-width: 300px;
             margin-left: auto;
             margin-right: auto;
             box-shadow: 0 0 10px rgba(139, 69, 19, 0.2);
+        }
+
+        .next-step-info .amount {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--accent-color);
+        }
+
+        .step-instruction .amount {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--accent-color);
         }
 
         .start-timer-button {
@@ -471,9 +484,9 @@
                 <div class="current-step" id="timerStepTitle">準備</div>
                 <div class="step-instruction" id="timerStepInstruction">豆を挽いてセットしてください</div>
 
-                <div style="background: #f0f0f0; padding: 6px; border-radius: 8px; margin-bottom: 10px;">
-                    <div style="font-size: 11px; color: #666;">総抽出時間</div>
-                    <div style="font-size: 18px; font-weight: 700; color: var(--accent-color);" id="totalTime">0:00</div>
+                <div style="background: #f0f0f0; padding: 12px; border-radius: 10px; margin-bottom: 15px;">
+                    <div style="font-size: 18px; color: #666;">総抽出時間</div>
+                    <div style="font-size: 42px; font-weight: 700; color: var(--accent-color);" id="totalTime">0:00</div>
                 </div>
 
                 <div class="progress-ring-wrapper">
@@ -864,33 +877,33 @@
                 steps: [
                     {
                         title: '準備',
-                        instruction: `${beans}gの豆を挽いてセットしてください`,
+                        instruction: `<span class="amount">${beans}g</span>の豆を挽いてセット`,
                         duration: 0,
                         action: ''
                     },
                     {
                         title: '1投目（蒸らし）',
-                        instruction: `${pour1}gのお湯を注いでください`,
+                        instruction: `<span class="amount">${pour1}g</span>のお湯を注ぐ`,
                         duration: 45,
-                        action: `${pour1}g注ぐ`
+                        action: `<span class="amount">${pour1}g</span>注ぐ`
                     },
                     {
                         title: '2投目',
-                        instruction: `合計${pour2}gまでお湯を注いでください`,
+                        instruction: `合計<span class="amount">${pour2}g</span>までお湯を注ぐ`,
                         duration: 45,
-                        action: `合計${pour2}gまで`
+                        action: `合計<span class="amount">${pour2}g</span>まで`
                     },
                     {
                         title: '3投目（抽出中）',
-                        instruction: `合計${pour3}gまでお湯を注いでください`,
+                        instruction: `合計<span class="amount">${pour3}g</span>までお湯を注ぐ`,
                         duration: 45,
-                        action: `合計${pour3}gまで`
+                        action: `合計<span class="amount">${pour3}g</span>まで`
                     },
                     {
                         title: '追加のお湯',
-                        instruction: extraWater > 0 ? `${extraWater}gのお湯を追加してください` : 'そのまま完成です！',
+                        instruction: extraWater > 0 ? `<span class="amount">${extraWater}g</span>のお湯を追加` : 'そのまま完成です！',
                         duration: 0,
-                        action: extraWater > 0 ? `${extraWater}g追加` : '完成'
+                        action: extraWater > 0 ? `<span class="amount">${extraWater}g</span>追加` : '完成'
                     }
                 ]
             };
@@ -960,7 +973,7 @@
         function updateTimerDisplay() {
             const step = currentRecipe.steps[currentStep];
             document.getElementById('timerStepTitle').textContent = step.title;
-            document.getElementById('timerStepInstruction').textContent = step.instruction;
+            document.getElementById('timerStepInstruction').innerHTML = step.instruction;
 
             if (step.duration > 0) {
                 // duration があるステップでは、総時間の独立カウントを停止
@@ -975,7 +988,7 @@
                 // 次のステップ情報を表示
                 if (currentStep < currentRecipe.steps.length - 1) {
                     const nextStep = currentRecipe.steps[currentStep + 1];
-                    document.getElementById('nextStepText').textContent = nextStep.action;
+                    document.getElementById('nextStepText').innerHTML = nextStep.action;
                     document.getElementById('nextStepInfo').style.display = 'block';
                 } else {
                     document.getElementById('nextStepInfo').style.display = 'none';
@@ -1009,7 +1022,7 @@
                         '<button class="timer-button" onclick="startBrewingProcess()">開始</button>';
                     if (currentStep < currentRecipe.steps.length - 1) {
                         const nextStepData = currentRecipe.steps[currentStep + 1];
-                        document.getElementById('nextStepText').textContent = nextStepData.action;
+                        document.getElementById('nextStepText').innerHTML = nextStepData.action;
                         document.getElementById('nextStepInfo').style.display = 'block';
                     }
                 } else {
@@ -1018,7 +1031,7 @@
                         '<button class="timer-button" onclick="nextStep()">次へ</button>';
                     if (currentStep < currentRecipe.steps.length - 1) {
                         const nextStepData = currentRecipe.steps[currentStep + 1];
-                        document.getElementById('nextStepText').textContent = nextStepData.action;
+                        document.getElementById('nextStepText').innerHTML = nextStepData.action;
                         document.getElementById('nextStepInfo').style.display = 'block';
                     }
                 }
@@ -1114,7 +1127,7 @@
                 // 次のステップ情報を表示
                 if (currentRecipe.steps.length > 1) {
                     const nextStepData = currentRecipe.steps[1];
-                    document.getElementById('nextStepText').textContent = nextStepData.action;
+                    document.getElementById('nextStepText').innerHTML = nextStepData.action;
                     document.getElementById('nextStepInfo').style.display = 'block';
                 } else {
                     document.getElementById('nextStepInfo').style.display = 'none';
